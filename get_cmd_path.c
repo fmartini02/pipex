@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 16:33:34 by francema          #+#    #+#             */
-/*   Updated: 2025/01/23 19:08:44 by francema         ###   ########.fr       */
+/*   Updated: 2025/01/28 17:13:23 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -36,7 +36,7 @@ char	*brute_testing(char **paths, char *cmd)
 		if (access(path, X_OK) == 0)
 		{
 			free(tmp);
-			break;
+			break ;
 		}
 		else
 		{

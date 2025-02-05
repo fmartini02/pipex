@@ -6,13 +6,13 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/11/25 17:51:05 by fmartini          #+#    #+#             */
-/*   Updated: 2025/01/23 19:12:56 by francema         ###   ########.fr       */
+/*   Updated: 2025/01/27 16:00:52 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-static int	ft_strlen_char(const char *s, char c)
+int	ft_strlen_char(const char *s, char c)
 {
 	int	i;
 
@@ -24,7 +24,7 @@ static int	ft_strlen_char(const char *s, char c)
 	return (i);
 }
 
-static char	*ft_strjoin_free(char *s1, char *s2)
+char	*ft_strjoin_free(char *s1, char *s2)
 {
 	char	*str;
 	int		i;

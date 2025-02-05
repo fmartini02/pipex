@@ -6,70 +6,65 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 14:17:55 by francema          #+#    #+#             */
-/*   Updated: 2025/01/23 16:48:28 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/04 16:51:44 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-int	create_and_fill_doc(t_pipex *pip)
+void	put_in_pipe(t_pipex *pip)
 {
 	char	*tmp;
-	char	*here;
-	int		fd_here;
 
-	here = ".here_doc";
-	fd_here = open(here, O_CREAT | O_RDWR | O_TRUNC, 0644);
-	if (fd_here == -1)
-	{
-		perror("Error: open failed");
-		exit(1);
-	}
-	tmp = NULL;
 	while (1)
 	{
 		tmp = get_next_line(0);
-		write(fd_here, tmp, ft_strlen(tmp));
-		write(fd_here, "\n", 1);
-		if (ft_strstr(tmp, pip->delimiter))
+		if (!tmp)
+		{
+			errno = ENOMEM;
+			perror("Error: get_next_line failed");
+			free_mem(pip, EXIT_FAILURE);
+		}
+		write(pip->pipe_fd[0][WRITE_END], tmp, ft_strlen(tmp));
+		if (ft_strcmp(tmp, pip->delimiter) == 0)
 		{
 			free(tmp);
 			break ;
 		}
 		free(tmp);
 	}
-	return (fd_here);
 }
 
 void	handle_fd(t_pipex *pip)
 {
 	close(0);
-	if (dup(pip->pipe_fd[pip->pip_idx][READ_END]) == -1)
+	if (dup(pip->pipe_fd[0][READ_END]) == -1)
 	{
 		perror("Error: dup failed");
-		exit(1);
+		free_mem(pip, EXIT_FAILURE);
 	}
 	close(1);
-	if (dup(pip->pipe_fd[pip->pip_idx][WRITE_END]) == -1)
+	if (dup(pip->pipe_fd[1][WRITE_END]) == -1)
 	{
 		perror("Error: dup failed");
-		exit(1);
+		free_mem(pip, EXIT_FAILURE);
 	}
 	close_pipfd(pip);
-	pip->pip_idx++;
+	pip->pip_idx += 2;
 }
 
-void	execute_here_doc(t_pipex *pip, char *path)
+void	execute_here_doc(t_pipex *pip)
 {
-	int	fd_here;
+	char	*path;
 
-	fd_here = create_and_fill_doc(pip);
-	pip->pipe_fd[pip->pip_idx][READ_END] = fd_here;
+	path = pip->path;
+	put_in_pipe(pip);
 	handle_fd(pip);
-	if (execve(path, pip->cmds[pip->cmd_idx], NULL) == -1)
+	pip->args = give_args(pip->cmds[pip->cmd_idx]);
+	if (execve(path, pip->args, NULL) == -1)
 	{
 		perror("Error: execve failed");
-		exit(1);
+		free_mem(pip, EXIT_FAILURE);
 	}
 	pip->here_doc_flag = 0;
 }

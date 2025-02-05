@@ -3,49 +3,45 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: fmartini <marvin@42.fr>                    +#+  +:+       +#+         #
+#    By: francema <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/05/28 19:12:26 by fmartini          #+#    #+#              #
-#    Updated: 2023/05/28 19:47:47 by fmartini         ###   ########.fr        #
+#    Created: 2025/01/27 15:57:22 by francema          #+#    #+#              #
+#    Updated: 2025/01/28 17:05:15 by francema         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
-NAME = pipex
+SRC = get_next_line.c \
+	get_next_line_utils.c
 
-SRC = pipex.c \
-      free.c \
-      error.c \
-      childs.c \
-      ft_strjoin.c \
-      ft_strdup.c \
-      ft_strncmp.c \
-      ft_split.c \
-      ft_strlen.c \
+OBJ = $(SRC:.c=.o)
 
-LIB_PIPEX = pipex.a
+NAME = gnl.a
 
-OBJS = ${SRC:.c=.o}
+CC = clang
 
-CC = gcc
+CFLAGS = -Wall -Wextra -Werror -g
 
-CFLAGS = -Wall -Werror -Wextra -g
+LIBFT = ../libft/libft.a
 
 all: $(NAME)
 
-$(NAME): $(LIB_PIPEX) $(OBJS)
-	$(CC) $(CFLAGS) $< -o $@
+$(LIBFT):
+	make -C ../libft
 
-$(LIB_PIPEX): $(OBJS)
-	ar -rcs $@ $^
+$(NAME): $(OBJ) $(LIBFT)
+	ar rcs $@ $(OBJ) $(LIBFT)
 
 %.o: %.c
-	$(CC) $(CFLAGS) -I. -c  $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	/bin/rm -f *.o
+	rm -f $(OBJ)
+	make -C ../libft clean
 
 fclean: clean
-	/bin/rm -f $(NAME)
+	rm -f $(NAME)
+	make -C ../libft fclean
 
-re : fclean all
+re: fclean all
 
+.PHONY: all clean fclean re

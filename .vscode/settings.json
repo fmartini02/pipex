@@ -1,0 +1,7 @@
+{
+	"files.associations": {
+		"pipex.h": "c",
+		"string.h": "c",
+		"errno.h": "c"
+	}
+}

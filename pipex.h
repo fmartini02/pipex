@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 10:52:45 by francema          #+#    #+#             */
-/*   Updated: 2025/01/23 19:09:21 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/04 16:38:58 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,7 +25,7 @@
 # include "libft/libft.h"
 # include "get_next_line/get_next_line.h"
 
-enum pipe_macro
+enum e_pipe
 {
 	READ_END,
 	WRITE_END
@@ -33,22 +33,27 @@ enum pipe_macro
 
 typedef struct s_pipex
 {
+	char	**envp;
 	int		**pipe_fd;
-	int		pip_idx;
 	char	**cmds;
+	char	**args;
+	int		pip_idx;
 	int		cmd_idx;
 	int		n_cmds;
-	int		here_doc_flag;
 	char	*delimiter;
 	char	*file_in;
 	char	*file_out;
+	char	*path;
+	int		here_doc_flag;
 }	t_pipex;
 
-int		main(int argc, char **argv);
+int		main(int argc, char **argv, char **envp);
+void	init_struct(t_pipex *pip, char **av, int ac, char **envp);
 char	*find_path(char *cmd);
-void	execute_cmds(t_pipex *pip, char *path);
-void	execute_here_doc(t_pipex *pip, char *path);
-void	init_struct(t_pipex *pip, char **av, int ac);
-
+char	**give_args(char *cmd);
+void	close_pipfd(t_pipex *pip);
+void	execute_cmds(t_pipex *pip);
+void	execute_here_doc(t_pipex *pip);
+void	free_mem(t_pipex *pip, int exit_code);
 
 #endif
