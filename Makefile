@@ -6,7 +6,7 @@
 #    By: francema <marvin@42.fr>                    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2025/01/27 15:55:24 by francema          #+#    #+#              #
-#    Updated: 2025/02/13 17:17:01 by francema         ###   ########.fr        #
+#    Updated: 2025/02/21 11:34:14 by francema         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -15,6 +15,7 @@
 SRC =main.c \
 	init_struct.c \
 	get_cmd_path.c \
+	forking.c \
 	execute_here_doc.c \
 	execute_cmds.c \
 	pipe_closing.c \

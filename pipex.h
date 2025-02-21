@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 10:52:45 by francema          #+#    #+#             */
-/*   Updated: 2025/02/19 17:51:18 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/21 11:34:32 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -90,6 +90,7 @@ typedef struct s_pipex
 }	t_pipex;
 
 int		main(int argc, char **argv, char **envp);
+void	main_utils(t_pipex *pip);
 void	init_struct(t_pipex *pip, char **av, int ac, char **envp);
 char	*find_path(char *cmd, t_pipex *pip);
 char	**give_args(char *cmd);

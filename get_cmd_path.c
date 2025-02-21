@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 16:33:34 by francema          #+#    #+#             */
-/*   Updated: 2025/02/19 17:49:40 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/21 11:31:21 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,6 @@ char	*find_path(char *cmd, t_pipex *pip)
 	if (!path)
 	{
 		ft_printf(ERR "%s: command not found\n" RESET, cmd);
-		//free_args(pip->args);
 		free_mid(pip, PATH);
 	}
 	return (path);

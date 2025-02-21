@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/02/13 17:06:41 by francema          #+#    #+#             */
-/*   Updated: 2025/02/21 11:13:30 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/21 11:23:44 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,7 +77,6 @@ void	free_mid(t_pipex *pip, int exit_code)
 	free(pip->cmds);
 	free(pip->pipe_fd);
 	free_args(pip->args);
-	free(pip->path);
 	free(pip->file_in);
 	free(pip->file_out);
 	if (pip->here_doc_flag)
