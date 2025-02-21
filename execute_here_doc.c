@@ -6,65 +6,94 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 14:17:55 by francema          #+#    #+#             */
-/*   Updated: 2025/02/04 16:51:44 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/19 17:48:10 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	put_in_pipe(t_pipex *pip)
+void	add_lines(t_pipex *pip)
 {
-	char	*tmp;
+	char	*line;
 
-	while (1)
+	line = get_next_line(0);
+	while (line)
 	{
-		tmp = get_next_line(0);
-		if (!tmp)
+		if (ft_strcmp(line, pip->delimiter) == 0)
 		{
-			errno = ENOMEM;
-			perror("Error: get_next_line failed");
-			free_mem(pip, EXIT_FAILURE);
+			free(line);
+			close_pipfd(pip);
+			free_here_doc(pip);
+			exit(EXIT_SUCCESS);
 		}
-		write(pip->pipe_fd[0][WRITE_END], tmp, ft_strlen(tmp));
-		if (ft_strcmp(tmp, pip->delimiter) == 0)
-		{
-			free(tmp);
-			break ;
-		}
-		free(tmp);
+		ft_putstr_fd(line, pip->pipe_fd[0][1]);
+		free(line);
+		line = get_next_line(0);
+	}
+	free_here_doc(pip);
+	exit(EXIT_FAILURE);
+}
+
+void	reader(t_pipex *pip)
+{
+	pid_t	reader_pid;
+
+	reader_pid = fork();
+	if (reader_pid == -1)
+	{
+		perror(ERR "Error: fork failed" RESET);
+		free_mid(pip, EXIT_FAILURE);
+	}
+	else if (reader_pid == 0)
+		add_lines(pip);
+	else
+	{
+		close(pip->pipe_fd[0][1]);
+		wait(NULL);
 	}
 }
 
-void	handle_fd(t_pipex *pip)
+void	redirector(t_pipex *pip)
 {
-	close(0);
-	if (dup(pip->pipe_fd[0][READ_END]) == -1)
+	if (dup2(pip->pipe_fd[1][1], STDOUT_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: dup2 failed" RESET);
+		close(pip->pipe_fd[1][1]);
+		free_mid(pip, DUP2);
 	}
-	close(1);
-	if (dup(pip->pipe_fd[1][WRITE_END]) == -1)
+	if (dup2(pip->pipe_fd[0][0], STDIN_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: dup2 failed" RESET);
+		close(pip->pipe_fd[0][0]);
+		free_mid(pip, DUP2);
 	}
 	close_pipfd(pip);
-	pip->pip_idx += 2;
 }
 
 void	execute_here_doc(t_pipex *pip)
 {
 	char	*path;
+	pid_t	pid;
 
 	path = pip->path;
-	put_in_pipe(pip);
-	handle_fd(pip);
-	pip->args = give_args(pip->cmds[pip->cmd_idx]);
-	if (execve(path, pip->args, NULL) == -1)
+	reader(pip);
+	pid = fork();
+	if (pid == -1)
 	{
-		perror("Error: execve failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "error: fork failed" RESET);
+		free_mid(pip, EXIT_FAILURE);
 	}
-	pip->here_doc_flag = 0;
+	else if (pid == 0)
+	{
+		redirector(pip);
+		free_bf_execve(pip);
+		if (execve(path, pip->args, NULL) == -1)
+		{
+			perror(ERR "Error: execve failed" RESET);
+			free_mid(pip, EXIT_FAILURE);
+		}
+	}
+	else
+		wait(NULL);
+	pip->here_doc_flag = 2;
 }

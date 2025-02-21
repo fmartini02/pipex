@@ -6,7 +6,7 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 16:33:34 by francema          #+#    #+#             */
-/*   Updated: 2025/01/28 17:13:23 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/19 17:49:40 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -45,11 +45,13 @@ char	*brute_testing(char **paths, char *cmd)
 		}
 		i++;
 	}
+	if (!paths[i])
+		path = NULL;
 	free_paths(paths);
 	return (path);
 }
 
-char	*find_path(char *cmd)
+char	*find_path(char *cmd, t_pipex *pip)
 {
 	char	**paths;
 	char	*path;
@@ -57,14 +59,16 @@ char	*find_path(char *cmd)
 	paths = ft_split(getenv("PATH"), ':');
 	if (!paths)
 	{
-		perror("Error: malloc failed");
-		exit(1);
+		ft_printf(ERR "Error: malloc failed\n" RESET);
+		free_args(pip->args);
+		free_mid(pip, MALLOC);
 	}
 	path = brute_testing(paths, cmd);
 	if (!path)
 	{
-		perror("Error: command not found");
-		exit(1);
+		ft_printf(ERR "%s: command not found\n" RESET, cmd);
+		//free_args(pip->args);
+		free_mid(pip, PATH);
 	}
 	return (path);
 }

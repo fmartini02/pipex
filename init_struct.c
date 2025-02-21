@@ -6,89 +6,100 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 13:50:24 by francema          #+#    #+#             */
-/*   Updated: 2025/02/04 16:49:42 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/19 17:49:07 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	fill_pip(t_pipex *pip, int tot_elem)
+char	**give_args(char *cmd)
+{
+	char	**args;
+
+	args = ft_split(cmd, ' ');
+	if (!args)
+	{
+		ft_printf(ERR "Error: malloc failed" RESET);
+		exit(MALLOC);
+	}
+	return (args);
+}
+
+void	init_pip(t_pipex *pip, int tot_elem)
 {
 	int	i;
-	int	special;
+	int	dummy_elem;
 
 	i = 0;
-	special = 3;
-	if (pip->here_doc_flag)
-		special = 4 - 1;//-1 becuse we need 1 pipe more for here_doc
-	while (i < (tot_elem - special))
+	dummy_elem = 3;
+	while (i < (tot_elem - dummy_elem - 1))
 	{
 		pip->pipe_fd[i] = malloc(sizeof(int) * 2);
 		if (!pip->pipe_fd[i])
 		{
-			errno = ENOMEM;
-			perror("Error: malloc failed");
-			free_mem(pip, EXIT_FAILURE);
+			ft_printf(ERR "Error: malloc failed\n" RESET);
+			free_mid(pip, MALLOC);
 		}
 		if (pipe(pip->pipe_fd[i]) == -1)
 		{
-			perror("Error: pipe failed");
-			free_mem(pip, EXIT_FAILURE);
+			perror(ERR "Error: pipe failed\n" RESET);
+			free_mid(pip, MALLOC);
 		}
 		i++;
 	}
-	pip->pipe_fd[i] = NULL;
 }
 
-void	fill_cmds(t_pipex *pip, char **av, int ac)
+void	init_cmds(t_pipex *pip, char **av, int ac)
 {
 	int	i;
-	int	special;
+	int	dummy_elem;
+	int	boh;
 
 	i = 0;
-	special = 3;
+	dummy_elem = 3;
+	boh = 2;
 	if (pip->here_doc_flag)
-		special = 4;
-	while (i < (ac - special))
 	{
-		pip->cmds[i] = ft_strdup(av[i + 2]);
+		dummy_elem = 4;
+		boh = 3;
+	}
+	while (i < (ac - dummy_elem))
+	{
+		pip->cmds[i] = ft_strdup(av[i + boh]);
 		if (!pip->cmds[i])
 		{
-			errno = ENOMEM;
-			perror("Error: malloc failed");
-			free_mem(pip, EXIT_FAILURE);
+			ft_printf(ERR "Error: malloc failed\n" RESET);
+			free_mid(pip, MALLOC);
 		}
 		i++;
 	}
 }
 
-void	element_init(t_pipex *pip, char **av, int tot_elm)
+void	init_pipes_cmds(t_pipex *pip, char **av, int tot_elm)
 {
-	int	special;
+	int	dummy_elem;
 	int	i;
 
-	special = 3;
+	dummy_elem = 3;
 	i = 1;
 	if (pip->here_doc_flag)
-	{
-		special = 4;
-		pip->pipe_fd = malloc(sizeof(int *) * (tot_elm - special + 1));
-	}
+		pip->n_pipes = pip->n_cmds;
 	else
-	{
-		pip->pipe_fd = malloc(sizeof(int *) * (tot_elm - special + 1));
-		pip->cmds = malloc(sizeof(char *) * (tot_elm - special + 1));
-	}
+		pip->n_pipes = pip->n_cmds - 1;
+	pip->pipe_fd = malloc(sizeof(int *) * (tot_elm - dummy_elem - 1));
 	if (pip->here_doc_flag)
-		pip->delimiter = av[++i];
+		pip->cmds = malloc(sizeof(char *) * (tot_elm - dummy_elem - 1));
+	else
+		pip->cmds = malloc(sizeof(char *) * (tot_elm - dummy_elem));
 	if (!pip->pipe_fd || !pip->cmds)
 	{
-		errno = ENOMEM;
-		perror("Error: malloc failed");
-		free_mem(pip, EXIT_FAILURE);
+		ft_printf(ERR "Error: malloc failed\n" RESET);
+		free_mid(pip, MALLOC);
 	}
-	fill_pip(pip, tot_elm);
-	fill_cmds(pip, av, tot_elm);
+	if (pip->here_doc_flag)
+		pip->delimiter = ft_strjoin(av[++i], "\n");
+	init_pip(pip, tot_elm);
+	init_cmds(pip, av, tot_elm);
 }
 
 void	init_struct(t_pipex *pip, char **av, int ac, char **envp)
@@ -98,6 +109,8 @@ void	init_struct(t_pipex *pip, char **av, int ac, char **envp)
 	tot_elem = ac;
 	pip->envp = envp;
 	pip->here_doc_flag = 0;
+	pip->path = NULL;
+	pip->args = NULL;
 	pip->cmd_idx = 0;
 	pip->pip_idx = 0;
 	pip->path = NULL;
@@ -113,6 +126,7 @@ void	init_struct(t_pipex *pip, char **av, int ac, char **envp)
 		pip->file_in = ft_strdup(av[1]);
 		pip->file_out = ft_strdup(av[tot_elem - 1]);
 		pip->n_cmds = tot_elem - 3;
+		pip->delimiter = NULL;
 	}
-	element_init(pip, av, tot_elem);
+	init_pipes_cmds(pip, av, tot_elem);
 }

@@ -6,56 +6,46 @@
 /*   By: francema <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 15:05:14 by francema          #+#    #+#             */
-/*   Updated: 2025/02/04 18:35:39 by francema         ###   ########.fr       */
+/*   Updated: 2025/02/19 17:46:36 by francema         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-char	**give_args(char *cmd)
-{
-	char	**args;
-
-	args = ft_split(cmd, ' ');
-	if (!args)
-	{
-		errno = ENOMEM;
-		perror("Error: malloc failed");
-		exit(127);
-	}
-	return (args);
-}
-
-void	first_child(t_pipex *pip, char *path)
+void	first_child_utils(t_pipex *pip)
 {
 	int		fd_in;
 
 	fd_in = open(pip->file_in, O_RDONLY);
 	if (fd_in == -1)
 	{
-		perror("Error: open failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR"Error: open failed" RESET);
+		free_mid(pip, OPEN);
 	}
 	if (dup2(fd_in, STDIN_FILENO) == -1)
 	{
-		perror("Error: dup failed");
+		perror(ERR"Error: dup2 failed" RESET);
 		close(fd_in);
-		free_mem(pip, EXIT_FAILURE);
+		free_mid(pip, DUP2);
 	}
 	close(fd_in);
 	if (dup2(pip->pipe_fd[pip->pip_idx][WRITE_END], STDOUT_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		close(pip->pipe_fd[pip->pip_idx][WRITE_END]);
+		perror(ERR "Error: dup2 failed" RESET);
 		close_pipfd(pip);
-		free_mem(pip, EXIT_FAILURE);
+		free_mid(pip, DUP2);
 	}
-	close(pip->pipe_fd[pip->pip_idx][WRITE_END]);
+}
+
+void	first_child(t_pipex *pip, char *path)
+{
+	first_child_utils(pip);
 	close_pipfd(pip);
+	free_bf_execve(pip);
 	if (execve(path, pip->args, pip->envp) == -1)
 	{
-		perror("Error: execve failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: execve failed" RESET);
+		free_mid(pip, EXECVE);
 	}
 }
 
@@ -63,27 +53,26 @@ void	mid_child(t_pipex *pip, char *path)
 {
 	if (dup2(pip->pipe_fd[pip->pip_idx - 1][READ_END], STDIN_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: dup2 failed" RESET);
+		close_pipfd(pip);
+		free_mid(pip, DUP2);
 	}
-	close(pip->pipe_fd[pip->pip_idx - 1][READ_END]);
 	if (dup2(pip->pipe_fd[pip->pip_idx][WRITE_END], STDOUT_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		close(pip->pipe_fd[pip->pip_idx][WRITE_END]);
+		perror(ERR "Error: dup2 failed" RESET);
 		close_pipfd(pip);
-		free_mem(pip, EXIT_FAILURE);
+		free_mid(pip, DUP2);
 	}
-	close(pip->pipe_fd[pip->pip_idx][WRITE_END]);
 	close_pipfd(pip);
+	free_bf_execve(pip);
 	if (execve(path, pip->args, pip->envp) == -1)
 	{
-		perror("Error: execve failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: execve failed" RESET);
+		free_mid(pip, EXECVE);
 	}
 }
 
-void	last_child(t_pipex *pip, char *path)
+void	last_child_utils(t_pipex *pip)
 {
 	int	fd_out;
 
@@ -93,41 +82,32 @@ void	last_child(t_pipex *pip, char *path)
 		fd_out = open(pip->file_out, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	if (fd_out == -1)
 	{
-		perror("Error: open failed");
-		free_mem(pip, EXIT_FAILURE);
+		perror(ERR "Error: open failed" RESET);
+		free_mid(pip, OPEN);
 	}
 	if (dup2(fd_out, STDOUT_FILENO) == -1)
 	{
-		perror("Error: dup failed");
+		perror(ERR "Error: du2p failed" RESET);
 		close(fd_out);
-		free_mem(pip, EXIT_FAILURE);
+		free_mid(pip, DUP2);
 	}
 	close (fd_out);
 	if (dup2(pip->pipe_fd[pip->pip_idx - 1][READ_END], STDIN_FILENO) == -1)
 	{
-		perror("Error: dup failed");
-		close (pip->pipe_fd[pip->pip_idx - 1][READ_END]);
+		perror(ERR "Error: dup2 failed" RESET);
 		close_pipfd(pip);
-		free_mem(pip, EXIT_FAILURE);
-	}
-	close (pip->pipe_fd[pip->pip_idx - 1][READ_END]);
-	close_pipfd(pip);
-	if (execve(path, pip->args, pip->envp) == -1)
-	{
-		perror("Error: execve failed");
-		free_mem(pip, EXIT_FAILURE);
+		free_mid(pip, DUP2);
 	}
 }
 
-void	execute_cmds(t_pipex *pip)
+void	last_child(t_pipex *pip, char *path)
 {
-	char	*path;
-
-	path = pip->path;
-	if (pip->pip_idx == 0)
-		first_child(pip, path);
-	else if (pip->pip_idx != pip->n_cmds -1)
-		mid_child(pip, path);
-	else
-		last_child(pip, path);
+	last_child_utils(pip);
+	close_pipfd(pip);
+	free_bf_execve(pip);
+	if (execve(path, pip->args, pip->envp) == -1)
+	{
+		perror(ERR "Error: execve failed" RESET);
+		free_mid(pip, EXECVE);
+	}
 }
